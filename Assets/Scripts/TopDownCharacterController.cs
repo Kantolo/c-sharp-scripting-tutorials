@@ -30,6 +30,8 @@ public class TopDownCharacterController : MonoBehaviour
 
     #endregion
 
+    private bool _isDead = false;
+
     /// <summary>
     /// When the script first initialises this gets called.
     /// Use this for grabbing components and setting up input bindings.
@@ -59,11 +61,22 @@ public class TopDownCharacterController : MonoBehaviour
     /// </summary>
     private void FixedUpdate()
     {
+        _isDead = GetComponent<PlayerHealthHandler>().IsDead();
+
         //clamp the speed to the maximum speed for if the speed has been changed in code.
         float speed = m_playerSpeed > m_playerMaxSpeed ? m_playerMaxSpeed : m_playerSpeed;
         
-        //apply the movement to the character using the clamped speed value.
-        m_rigidbody.linearVelocity = m_playerDirection * (speed * Time.fixedDeltaTime);
+        if(!_isDead)
+        {
+            //apply the movement to the character using the clamped speed value.
+            m_rigidbody.linearVelocity = m_playerDirection * (speed * Time.fixedDeltaTime);
+        }
+        else
+        {
+            m_rigidbody.linearVelocity = new Vector2(0,0);
+            m_animator.SetFloat("Speed", 0);
+        }
+        
     }
     
     /// <summary>
@@ -73,26 +86,30 @@ public class TopDownCharacterController : MonoBehaviour
     /// </summary>
     void Update()
     {
-        // store any movement inputs into m_playerDirection - this will be used in FixedUpdate to move the player.
-        m_playerDirection = m_moveAction.ReadValue<Vector2>();
-        
-        // ~~ handle animator ~~
-        // Update the animator speed to ensure that we revert to idle if the player doesn't move.
-        m_animator.SetFloat("Speed", m_playerDirection.magnitude);
-        
-        // If there is movement, set the directional values to ensure the character is facing the way they are moving.
-        if (m_playerDirection.magnitude > 0)
+        if(!_isDead)
         {
-            m_animator.SetFloat("Horizontal", m_playerDirection.x);
-            m_animator.SetFloat("Vertical", m_playerDirection.y);
-        }
+            // store any movement inputs into m_playerDirection - this will be used in FixedUpdate to move the player.
+            m_playerDirection = m_moveAction.ReadValue<Vector2>();
 
-        // check if an attack has been triggered.
-        if (m_attackAction.IsPressed())
-        {
-            // just log that an attack has been registered for now
-            // we will look at how to do this in future sessions.
-            Debug.Log("Attack!");
+            // ~~ handle animator ~~
+            // Update the animator speed to ensure that we revert to idle if the player doesn't move.
+            m_animator.SetFloat("Speed", m_playerDirection.magnitude);
+
+            // If there is movement, set the directional values to ensure the character is facing the way they are moving.
+            if (m_playerDirection.magnitude > 0)
+            {
+                m_animator.SetFloat("Horizontal", m_playerDirection.x);
+                m_animator.SetFloat("Vertical", m_playerDirection.y);
+            }
+
+            // check if an attack has been triggered.
+            if (m_attackAction.IsPressed())
+            {
+                // just log that an attack has been registered for now
+                // we will look at how to do this in future sessions.
+                Debug.Log("Attack!");
+            }
         }
+        
     }
 }
