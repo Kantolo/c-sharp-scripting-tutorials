@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -27,6 +28,8 @@ public class TopDownCharacterController : MonoBehaviour
     [SerializeField] private float _playerSpeed = 200f;
     //The maximum speed the player can move
     [SerializeField] private float _playerMaxSpeed = 1000f;
+
+    [SerializeField] private GameObject _firePoint;
 
     [Header("Projectile Parameters")]
     [SerializeField] private GameObject _projectilePrefab;
@@ -120,16 +123,16 @@ public class TopDownCharacterController : MonoBehaviour
             }
 
             //check if an attack has been triggered.
-            if (_attackAction.IsPressed() && Time.time > _fireTimeout)
-            {
-                _fireTimeout = Time.time + _fireRate;
-                Fire();
-            }
-
-            //if (_attackAction.IsPressed())
+            //if (_attackAction.IsPressed() && Time.time > _fireTimeout)
             //{
-            //    MeleeSwing();
+            //    _fireTimeout = Time.time + _fireRate;
+            //    Fire();
             //}
+
+            if (_attackAction.IsPressed())
+            {
+                MeleeSwing();
+            }
         }
     }
 
@@ -145,11 +148,6 @@ public class TopDownCharacterController : MonoBehaviour
 
     void MeleeSwing()
     {
-        GameObject coneToSpawn = Instantiate(_conePrefab, transform.position, Quaternion.identity);
 
-        if (coneToSpawn.GetComponent<Rigidbody2D>() != null)
-        {
-            coneToSpawn.transform.rotation = Quaternion.FromToRotation(transform.position, _mouseDirection.normalized);
-        }
     }
 }
