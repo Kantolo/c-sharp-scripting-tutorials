@@ -31481,9 +31481,10 @@ MonoBehaviour:
   _playerSpeed: 200
   _playerMaxSpeed: 1000
   _projectilePrefab: {fileID: 9137902835572350767, guid: 6e4cc03f11fb81d4c9aa3679e020b05b, type: 3}
-  _firePoint: {fileID: 1501285961}
   _projectileSpeed: 15
-  _fireRate: 3
+  _fireRate: 0.1
+  _conePrefab: {fileID: 8633242470578860902, guid: 9c14c5a90038aad4eab4a212d43f313a, type: 3}
+  _meleeDamage: 0
 --- !u!50 &1618778969
 Rigidbody2D:
   serializedVersion: 5

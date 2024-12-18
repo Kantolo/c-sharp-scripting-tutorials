@@ -30,12 +30,15 @@ public class TopDownCharacterController : MonoBehaviour
 
     [Header("Projectile Parameters")]
     [SerializeField] private GameObject _projectilePrefab;
-    [SerializeField] private Transform _firePoint;
     [SerializeField] private float _projectileSpeed;
     [SerializeField] private float _fireRate;
+
+    [Header("Melee Parameters")]
+    [SerializeField] private GameObject _conePrefab;
+    [SerializeField] private float _meleeDamage;
     private float _fireTimeout = 0;
-    private Vector2 mousePos;
-    private Vector2 mouseDirection;
+    private Vector2 _mousePos;
+    private Vector2 _mouseDirection;
 
     #endregion
 
@@ -55,7 +58,7 @@ public class TopDownCharacterController : MonoBehaviour
         _animator = GetComponent<Animator>();
         _rigidbody = GetComponent<Rigidbody2D>();
 
-        mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        _mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
     }
 
     /// <summary>
@@ -63,7 +66,6 @@ public class TopDownCharacterController : MonoBehaviour
     /// </summary>
     void Start()
     {
-        
     }
 
     /// <summary>
@@ -97,9 +99,9 @@ public class TopDownCharacterController : MonoBehaviour
     /// </summary>
     void Update()
     {
-        mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mouseDirection = mousePos - new Vector2(transform.position.x, transform.position.y);
-        mouseDirection = mouseDirection.normalized;
+        _mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        _mouseDirection = _mousePos - new Vector2(transform.position.x, transform.position.y);
+        //_mouseDirection = _mouseDirection.normalized;
 
         if(!_isDead)
         {
@@ -117,23 +119,37 @@ public class TopDownCharacterController : MonoBehaviour
                 _animator.SetFloat("Vertical", _playerDirection.y);
             }
 
-            // check if an attack has been triggered.
+            //check if an attack has been triggered.
             if (_attackAction.IsPressed() && Time.time > _fireTimeout)
             {
                 _fireTimeout = Time.time + _fireRate;
                 Fire();
             }
+
+            //if (_attackAction.IsPressed())
+            //{
+            //    MeleeSwing();
+            //}
         }
-        
     }
 
     void Fire()
     {
-        GameObject projectileToSpawn = Instantiate(_projectilePrefab, _firePoint.position, Quaternion.identity);
+        GameObject projectileToSpawn = Instantiate(_projectilePrefab, transform.position, Quaternion.identity);
 
         if(projectileToSpawn.GetComponent<Rigidbody2D>() != null)
         {
-            projectileToSpawn.GetComponent<Rigidbody2D>().AddForce(mouseDirection * _projectileSpeed, ForceMode2D.Impulse);
+            projectileToSpawn.GetComponent<Rigidbody2D>().AddForce(_mouseDirection.normalized * _projectileSpeed, ForceMode2D.Impulse);
+        }
+    }
+
+    void MeleeSwing()
+    {
+        GameObject coneToSpawn = Instantiate(_conePrefab, transform.position, Quaternion.identity);
+
+        if (coneToSpawn.GetComponent<Rigidbody2D>() != null)
+        {
+            coneToSpawn.transform.rotation = Quaternion.FromToRotation(transform.position, _mouseDirection.normalized);
         }
     }
 }
