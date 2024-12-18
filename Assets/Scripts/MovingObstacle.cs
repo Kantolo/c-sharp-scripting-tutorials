@@ -23,12 +23,6 @@ public class MovingObstacle : MonoBehaviour
         transform.position = Vector2.MoveTowards(transform.position, _target.position, _speed);
     }
 
-
-    void Update()
-    {
-
-    }
-
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("MovingObstacleWaypoint"))
@@ -51,10 +45,7 @@ public class MovingObstacle : MonoBehaviour
     void ChangeTarget()
     {
         index++;
-        if (index == _waypoints.Length)
-        {
-            index = 0;
-        }
+        index %= _waypoints.Length;
         _target = _waypoints[index];
     }
 }

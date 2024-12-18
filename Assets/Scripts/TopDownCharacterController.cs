@@ -11,22 +11,31 @@ public class TopDownCharacterController : MonoBehaviour
     #region Framework Variables
 
     //The inputs that we need to retrieve from the input system.
-    private InputAction m_moveAction;
-    private InputAction m_attackAction;
+    private InputAction _moveAction;
+    private InputAction _attackAction;
 
     //The components that we need to edit to make the player move smoothly.
-    private Animator m_animator;
-    private Rigidbody2D m_rigidbody;
+    private Animator _animator;
+    private Rigidbody2D _rigidbody;
     
     //The direction that the player is moving in.
-    private Vector2 m_playerDirection;
+    private Vector2 _playerDirection;
    
 
     [Header("Movement parameters")]
     //The speed at which the player moves
-    [SerializeField] private float m_playerSpeed = 200f;
+    [SerializeField] private float _playerSpeed = 200f;
     //The maximum speed the player can move
-    [SerializeField] private float m_playerMaxSpeed = 1000f;
+    [SerializeField] private float _playerMaxSpeed = 1000f;
+
+    [Header("Projectile Parameters")]
+    [SerializeField] private GameObject _projectilePrefab;
+    [SerializeField] private Transform _firePoint;
+    [SerializeField] private float _projectileSpeed;
+    [SerializeField] private float _fireRate;
+    private float _fireTimeout = 0;
+    private Vector2 mousePos;
+    private Vector2 mouseDirection;
 
     #endregion
 
@@ -39,12 +48,14 @@ public class TopDownCharacterController : MonoBehaviour
     private void Awake()
     {
         //bind movement inputs to variables
-        m_moveAction = InputSystem.actions.FindAction("Move");
-        m_attackAction = InputSystem.actions.FindAction("Attack");
+        _moveAction = InputSystem.actions.FindAction("Move");
+        _attackAction = InputSystem.actions.FindAction("Attack");
         
         //get components from Character game object so that we can use them later.
-        m_animator = GetComponent<Animator>();
-        m_rigidbody = GetComponent<Rigidbody2D>();
+        _animator = GetComponent<Animator>();
+        _rigidbody = GetComponent<Rigidbody2D>();
+
+        mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
     }
 
     /// <summary>
@@ -64,17 +75,17 @@ public class TopDownCharacterController : MonoBehaviour
         _isDead = GetComponent<PlayerHealthHandler>().IsDead();
 
         //clamp the speed to the maximum speed for if the speed has been changed in code.
-        float speed = m_playerSpeed > m_playerMaxSpeed ? m_playerMaxSpeed : m_playerSpeed;
+        float speed = _playerSpeed > _playerMaxSpeed ? _playerMaxSpeed : _playerSpeed;
         
         if(!_isDead)
         {
             //apply the movement to the character using the clamped speed value.
-            m_rigidbody.linearVelocity = m_playerDirection * (speed * Time.fixedDeltaTime);
+            _rigidbody.linearVelocity = _playerDirection * (speed * Time.fixedDeltaTime);
         }
         else
         {
-            m_rigidbody.linearVelocity = new Vector2(0,0);
-            m_animator.SetFloat("Speed", 0);
+            _rigidbody.linearVelocity = new Vector2(0,0);
+            _animator.SetFloat("Speed", 0);
         }
         
     }
@@ -86,30 +97,43 @@ public class TopDownCharacterController : MonoBehaviour
     /// </summary>
     void Update()
     {
+        mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        mouseDirection = mousePos - new Vector2(transform.position.x, transform.position.y);
+        mouseDirection = mouseDirection.normalized;
+
         if(!_isDead)
         {
             // store any movement inputs into m_playerDirection - this will be used in FixedUpdate to move the player.
-            m_playerDirection = m_moveAction.ReadValue<Vector2>();
+            _playerDirection = _moveAction.ReadValue<Vector2>();
 
             // ~~ handle animator ~~
             // Update the animator speed to ensure that we revert to idle if the player doesn't move.
-            m_animator.SetFloat("Speed", m_playerDirection.magnitude);
+            _animator.SetFloat("Speed", _playerDirection.magnitude);
 
             // If there is movement, set the directional values to ensure the character is facing the way they are moving.
-            if (m_playerDirection.magnitude > 0)
+            if (_playerDirection.magnitude > 0)
             {
-                m_animator.SetFloat("Horizontal", m_playerDirection.x);
-                m_animator.SetFloat("Vertical", m_playerDirection.y);
+                _animator.SetFloat("Horizontal", _playerDirection.x);
+                _animator.SetFloat("Vertical", _playerDirection.y);
             }
 
             // check if an attack has been triggered.
-            if (m_attackAction.IsPressed())
+            if (_attackAction.IsPressed() && Time.time > _fireTimeout)
             {
-                // just log that an attack has been registered for now
-                // we will look at how to do this in future sessions.
-                Debug.Log("Attack!");
+                _fireTimeout = Time.time + _fireRate;
+                Fire();
             }
         }
         
+    }
+
+    void Fire()
+    {
+        GameObject projectileToSpawn = Instantiate(_projectilePrefab, _firePoint.position, Quaternion.identity);
+
+        if(projectileToSpawn.GetComponent<Rigidbody2D>() != null)
+        {
+            projectileToSpawn.GetComponent<Rigidbody2D>().AddForce(mouseDirection * _projectileSpeed, ForceMode2D.Impulse);
+        }
     }
 }
